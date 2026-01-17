@@ -1,0 +1,18 @@
+[
+    {
+        "name": "1",
+        "start_time": "2015-10-10T10:10:00",
+        "category": "Self-Study-STEM",
+        "duration": 60,
+        "completed": false,
+        "note": ""
+    },
+    {
+        "name": "2",
+        "start_time": "2026-01-16T10:00:00",
+        "category": "School Work",
+        "duration": 60,
+        "completed": false,
+        "note": ""
+    }
+]
