@@ -4,7 +4,7 @@ import customtkinter as ctk
 import tkinter as tk
 from datetime import datetime
 from week_view import WeekView
-
+import theme
 
 class TasksTab:
     def __init__(self, main_app):
@@ -18,67 +18,72 @@ class TasksTab:
     def create_ui(self):
         """Create all UI elements for tasks tab"""
         # Main frame
-        self.tasks_frame = ctk.CTkFrame(self.root, corner_radius=16)
+        self.tasks_frame = ctk.CTkFrame(self.root, corner_radius=16, fg_color="transparent")
 
         # --- List View Container ---
         self.list_container = ctk.CTkFrame(self.tasks_frame, fg_color="transparent")
         self.list_container.pack(fill="both", expand=True)
 
         # Title
-        title_label = ctk.CTkLabel(
-            self.list_container,
-            text="📋 Task Manager",
-            font=ctk.CTkFont(size=24, weight="bold")
-        )
-        title_label.pack(pady=(10, 5))
+        # title_label = ctk.CTkLabel(
+        #     self.list_container,
+        #     text="📋 Task Manager",
+        #     font=ctk.CTkFont(family="Segoe UI", size=24, weight="bold"),
+        #     text_color=theme.TEXT_PRIMARY
+        # )
+        # title_label.pack(pady=(10, 5))
 
-        # Button frame
-        button_frame = ctk.CTkFrame(self.list_container, fg_color="transparent")
-        button_frame.pack(pady=10)
+        # Header / Control Bar
+        control_bar = ctk.CTkFrame(self.list_container, fg_color=theme.BG_CONTAINER, height=60, corner_radius=12)
+        control_bar.pack(fill="x", pady=(0, 15), padx=5)
+
+        ctk.CTkLabel(control_bar, text="My Tasks", font=ctk.CTkFont(size=20, weight="bold"), text_color=theme.TEXT_PRIMARY).pack(side="left", padx=20, pady=10)
 
         # Action buttons
-        ctk.CTkButton(button_frame, text="➕ Add Task", command=self.open_add_task_window).pack(side="left", padx=5)
-        ctk.CTkButton(button_frame, text="✅ Mark Done", command=self.mark_done).pack(side="left", padx=5)
-        ctk.CTkButton(button_frame, text="🗑️ Delete", command=self.delete_task).pack(side="left", padx=5)
-        ctk.CTkButton(button_frame, text="🔄 Refresh", command=self.refresh).pack(side="left", padx=5)
-        # New Calendar View Button
-        ctk.CTkButton(button_frame, text="📅 Calendar View", command=self.show_calendar_view).pack(side="left", padx=5)
+        
+        def make_action_btn(text, cmd, color=theme.BTN_BG, hover=theme.BTN_HOVER):
+             return ctk.CTkButton(
+                control_bar, 
+                text=text, 
+                command=cmd, 
+                font=ctk.CTkFont(size=13, weight="bold"),
+                fg_color=color, 
+                hover_color=hover,
+                height=32,
+                corner_radius=8
+            )
 
-        # Task list frame
-        listbox_frame = ctk.CTkFrame(self.list_container)
-        listbox_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Listbox label
-        ctk.CTkLabel(listbox_frame, text="Your Tasks:", font=ctk.CTkFont(weight="bold")).pack(anchor="w", pady=(5, 0))
-
-        self.task_listbox = tk.Listbox(
-            listbox_frame,
-            width=90,
-            height=18,
-            bg="#111111",
-            fg="white",
-            selectforeground="white",
-            highlightbackground="#111111",
-            borderwidth=0,
-            selectbackground="#2a85ff",
-            font=("Arial", 14)
+        make_action_btn("📅 Calendar View", self.show_calendar_view).pack(side="right", padx=10)
+        make_action_btn("➕ New Task", self.open_add_task_window, color=theme.ACCENT_BLUE).pack(side="right", padx=5)
+        
+        # Scrollable Task List
+        self.task_scroll_frame = ctk.CTkScrollableFrame(
+            self.list_container,
+            fg_color="transparent",
+            corner_radius=0
         )
-        self.task_listbox.pack(fill="both", expand=True, padx=6, pady=6)
+        self.task_scroll_frame.pack(fill="both", expand=True, padx=0, pady=0)
+
 
         # --- Calendar View Container ---
         self.calendar_container = ctk.CTkFrame(self.tasks_frame, fg_color="transparent")
         # Hidden by default
 
         # Back button for calendar
-        ctk.CTkButton(self.calendar_container, text="⬅ Back to List", command=self.show_list_view).pack(anchor="w", padx=10, pady=10)
+        ctk.CTkButton(
+            self.calendar_container, 
+            text="⬅ Back to List", 
+            command=self.show_list_view,
+            fg_color=theme.BTN_BG,
+            hover_color=theme.BTN_HOVER
+        ).pack(anchor="w", padx=10, pady=10)
 
-        # Initialize WeekView
         self.week_view = WeekView(self.calendar_container, self.manager)
         self.week_view.pack(fill="both", expand=True)
 
     def show(self):
         """Display the tasks tab"""
-        self.tasks_frame.pack(fill="both", expand=True, padx=16, pady=16)
+        self.tasks_frame.pack(fill="both", expand=True, padx=20, pady=20)
         self.refresh()
 
     def hide(self):
@@ -87,54 +92,112 @@ class TasksTab:
 
     def refresh(self):
         """Refresh the task list display"""
-        self.task_listbox.delete(0, tk.END)
+        # Clear existing
+        for widget in self.task_scroll_frame.winfo_children():
+            widget.destroy()
+
         if not self.manager.tasks:
-            self.task_listbox.insert(tk.END, "No tasks found. Click 'Add Task' to get started!")
+            ctk.CTkLabel(
+                self.task_scroll_frame, 
+                text="No tasks found. Click 'New Task' to get started!",
+                text_color=theme.TEXT_MUTED,
+                font=ctk.CTkFont(size=16)
+            ).pack(pady=40)
         else:
             for task in self.manager.tasks:
-                self.task_listbox.insert(tk.END, str(task))
+                self.render_task_row(task)
 
-    # ... (rest of the methods remain the same as previous implementation)
+    def render_task_row(self, task):
+        """Render a single task row"""
+        row = ctk.CTkFrame(self.task_scroll_frame, fg_color=theme.BG_CARD, corner_radius=10, border_width=1, border_color=theme.BORDER_NORMAL)
+        row.pack(fill="x", pady=6, padx=5)
+
+        # Status Indicator (Left Border equivalent)
+        status_color = theme.ACCENT_GREEN if task.completed else theme.ACCENT_BLUE
+        
+        # Checkbox / Done Button
+        done_btn = ctk.CTkButton(
+            row,
+            text="✔" if task.completed else "",
+            width=32,
+            height=32,
+            corner_radius=8,
+            fg_color=theme.ACCENT_GREEN if task.completed else theme.BTN_BG,
+            hover_color=theme.ACCENT_GREEN,
+            border_width=1 if not task.completed else 0,
+            border_color=theme.BORDER_HIGHLIGHT,
+            command=lambda t=task: self.mark_task_done(t)
+        )
+        done_btn.pack(side="left", padx=(15, 15), pady=15)
+
+        # Task Info
+        info_frame = ctk.CTkFrame(row, fg_color="transparent")
+        info_frame.pack(side="left", fill="both", expand=True, pady=10)
+
+        name_font = ctk.CTkFont(size=16, weight="bold", overstrike=task.completed)
+        name_color = theme.TEXT_MUTED if task.completed else theme.TEXT_PRIMARY
+        
+        ctk.CTkLabel(info_frame, text=task.name, font=name_font, text_color=name_color, anchor="w").pack(fill="x")
+        
+        details_text = f"{task.category}  •  {task.duration} min"
+        if task.start_time:
+             details_text += f"  •  {task.start_time}"
+            
+        ctk.CTkLabel(info_frame, text=details_text, font=ctk.CTkFont(size=12), text_color=theme.TEXT_MUTED, anchor="w").pack(fill="x")
+
+        # Delete Button
+        ctk.CTkButton(
+            row,
+            text="🗑",
+            width=32,
+            height=32,
+            fg_color="transparent",
+            hover_color=theme.ACCENT_RED,
+            text_color=theme.TEXT_SECONDARY,
+            font=ctk.CTkFont(size=16),
+            command=lambda t=task: self.delete_task_object(t)
+        ).pack(side="right", padx=15)
+
+
     def open_add_task_window(self):
         """Open popup to add new task"""
         add_window = ctk.CTkToplevel(self.root)
         add_window.title("Add New Task")
-        add_window.geometry("380x450")
+        add_window.geometry("420x500")
+        add_window.configure(fg_color=theme.BG_MAIN)
         add_window.grab_set()
 
-        wrap = ctk.CTkFrame(add_window, corner_radius=12)
-        wrap.pack(fill="both", expand=True, padx=16, pady=16)
+        wrap = ctk.CTkFrame(add_window, corner_radius=12, fg_color=theme.BG_CONTAINER)
+        wrap.pack(fill="both", expand=True, padx=20, pady=20)
+
+        def add_field(label_text, placeholder):
+            ctk.CTkLabel(wrap, text=label_text, text_color=theme.TEXT_PRIMARY).pack(anchor="w", pady=(10, 2))
+            entry = ctk.CTkEntry(wrap, width=340, placeholder_text=placeholder, fg_color=theme.BTN_BG, border_color=theme.BORDER_NORMAL)
+            entry.pack(pady=2)
+            return entry
 
         # Task name
-        ctk.CTkLabel(wrap, text="Task Name:").pack(anchor="w", pady=(6, 2))
-        name_entry = ctk.CTkEntry(wrap, width=300, placeholder_text="e.g., Math Assignment 1")
-        name_entry.pack(pady=4)
+        name_entry = add_field("Task Name:", "e.g., Math Assignment 1")
 
         # Category
-        ctk.CTkLabel(wrap, text="Category:").pack(anchor="w", pady=(8, 2))
+        ctk.CTkLabel(wrap, text="Category:", text_color=theme.TEXT_PRIMARY).pack(anchor="w", pady=(10, 2))
         category_options = [
             "School Work", "Self-Study-STEM", "Self-Study-Humanities", "Workout",
             "Combat Training", "Looks", "Practice Music", "Practice Arts",
             "Play Sports", "Others"
         ]
         category_var = ctk.StringVar(value=category_options[0])
-        category_dropdown = ctk.CTkComboBox(wrap, variable=category_var, values=category_options, width=300)
-        category_dropdown.pack(pady=4)
+        category_dropdown = ctk.CTkComboBox(wrap, variable=category_var, values=category_options, width=340, fg_color=theme.BTN_BG, border_color=theme.BORDER_NORMAL, button_color=theme.ACCENT_BLUE)
+        category_dropdown.pack(pady=2)
 
         # Scheduled time
-        ctk.CTkLabel(wrap, text="Scheduled Time:").pack(anchor="w", pady=(8, 2))
-        time_entry = ctk.CTkEntry(wrap, width=300, placeholder_text="e.g., 2025-11-05 15:00 or leave blank")
-        time_entry.pack(pady=4)
+        time_entry = add_field("Scheduled Time:", "e.g., 2025-11-05 15:00 or leave blank")
 
         # Duration
-        ctk.CTkLabel(wrap, text="Duration in minutes:").pack(anchor="w", pady=(8, 2))
-        duration_entry = ctk.CTkEntry(wrap, width=300, placeholder_text="e.g., 60")
-        duration_entry.pack(pady=4)
+        duration_entry = add_field("Duration in minutes:", "e.g., 60")
 
         # Note
-        ctk.CTkLabel(wrap, text="Note:").pack(anchor="w", pady=(8, 2))
-        note_entry = ctk.CTkEntry(wrap, width=300, placeholder_text="optional")
-        note_entry.pack(pady=4)
+        note_entry = add_field("Note:", "optional")
 
         def save_and_close():
             name = name_entry.get().strip()
@@ -159,7 +222,6 @@ class TasksTab:
                 return
 
             category = category_var.get()
-            scheduled_time = time_entry.get().strip() or "No time"
             note = note_entry.get().strip() or ""
 
             raw_time = time_entry.get().strip()
@@ -168,10 +230,7 @@ class TasksTab:
                 try:
                     start_time = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
                 except ValueError:
-                    messagebox.showerror(
-                        "Invalid Time Format",
-                        "Use YYYY-MM-DD HH:MM"
-                    )
+                    messagebox.showerror("Invalid Time Format", "Use YYYY-MM-DD HH:MM")
                     return
             else:
                 start_time = None
@@ -180,57 +239,59 @@ class TasksTab:
             self.refresh()
             add_window.destroy()
 
-        ctk.CTkButton(wrap, text="Add Task", command=save_and_close).pack(pady=12)
+        ctk.CTkButton(
+            wrap, 
+            text="Add Task", 
+            command=save_and_close, 
+            width=340, 
+            height=40,
+            fg_color=theme.ACCENT_BLUE,
+            hover_color="#0ea5e9", # a slightly darker blue
+            font=ctk.CTkFont(weight="bold")
+        ).pack(pady=30)
+    
+    # NEW: Direct task object manipulation instead of listbox selection
+    def mark_task_done(self, task):
+        if task.completed:
+            messagebox.showinfo("Info", f"'{task.name}' is already done.")
+            return
 
-    def mark_done(self):
-        """Mark selected task as done and award XP"""
-        # Check if task is already done
+        self.calendar_tab.add_event_today(task.name, 0)
+        self.manager.mark_done(task.name)
 
-        try:
-            selection = self.task_listbox.get(self.task_listbox.curselection())
-            name = selection.split(" | ")[0].replace("✅", "").replace("⬜", "").strip()
-            task = self.manager.get_task(name)
+        player = self.main_app.get_player()
+        category = task.category
 
-            if not task:
-                messagebox.showerror("Error", "Task not found.")
-                return
+        if category == "School Work":
+            self.handle_school_work_xp(task, player)
+        else:
+            self.ask_focus_rating(task, category, player)
 
-            # Check if task is already done
-            if task.completed:  # or task.is_done depending on your Task class
-                messagebox.showinfo("Info", f"'{task.name}' is already marked as done.")
-                return
+        self.refresh()
+        self.main_app.refresh_all()
 
-            # Record the task as an event in the calendar
-            self.calendar_tab.add_event_today(task.name, 0)
+    # Need to keep the legacy method signatures if they are called dynamically, but usually we just replace them.
+    # The old mark_done depended on listbox selection. We can remove it or keep it as a stub.
+    # I'll simply strictly implement what's needed.
 
-            # Mark task as done
-            self.manager.mark_done(name)
-
-            # Award XP based on category
-            player = self.main_app.get_player()
-            category = task.category
-
-            if category == "School Work":
-                self.handle_school_work_xp(task, player)
-            else:
-                self.ask_focus_rating(task, category, player)
-
+    def delete_task_object(self, task):
+        if messagebox.askyesno("Confirm", f"Delete '{task.name}'?"):
+            self.manager.delete_task(task.name)
             self.refresh()
-            self.main_app.refresh_all()  # Update stats tab
-
-        except tk.TclError:
-            messagebox.showwarning("Warning", "Please select a task to mark as done.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error marking task done: {e}")
 
     def handle_school_work_xp(self, task, player):
         """Handle XP calculation for school work"""
         grade = simpledialog.askfloat("Grade", "Enter your grade (0–100):",
                                       parent=self.root, minvalue=0, maxvalue=100)
+        if grade is None: return 
+        
         target = simpledialog.askfloat("Target", "Enter your target grade (0–100):",
                                        parent=self.root, minvalue=0, maxvalue=100)
+        if target is None: return
+
         weight = simpledialog.askfloat("Weight", "Enter assignment weight (0–1):",
                                        parent=self.root, minvalue=0, maxvalue=1)
+        if weight is None: return
 
         disc = player.discipline if hasattr(player, "discipline") else 0
         base = int(task.duration)
@@ -245,29 +306,45 @@ class TasksTab:
 
         messagebox.showinfo("XP Gained", f"You earned {raw_xp:.1f} XP from {task.category}.")
         self.calendar_tab.add_event_today(task.name, raw_xp)
+
     def ask_focus_rating(self, task, category, player):
         """Ask for focus rating and award XP"""
-        popup = tk.Toplevel(self.root)
+        popup = ctk.CTkToplevel(self.root)
         popup.title("Rate Your Focus")
-        popup.geometry("250x200")
+        popup.geometry("300x260")
+        popup.configure(fg_color=theme.BG_MAIN)
         popup.grab_set()
+        
+        frame = ctk.CTkFrame(popup, fg_color=theme.BG_CONTAINER, corner_radius=12)
+        frame.pack(fill="both", expand=True, padx=15, pady=15)
 
-        tk.Label(popup, text=f"How focused were you on '{task.name}'?", wraplength=200).pack(pady=10)
+        ctk.CTkLabel(frame, text=f"How focused were you on\n'{task.name}'?", font=ctk.CTkFont(size=16)).pack(pady=15)
 
         selected = tk.IntVar(value=0)
-        for i in range(1, 5):
-            tk.Radiobutton(popup, text=f"{i} - {'⭐' * i}", variable=selected, value=i).pack(anchor="w")
-
-        def submit_rating():
-            focus_rating = selected.get()
-            if focus_rating == 0:
-                messagebox.showwarning("Missing", "Please select a focus level.")
-                return
-
+        
+        # Custom radio buttons or just simple buttons. Let's use simple buttons for clearer UX.
+        
+        def rate(i):
             popup.destroy()
-            self.calculate_xp(task, category, player, focus_rating)
+            self.calculate_xp(task, category, player, i)
+            
+        btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        btn_frame.pack(pady=10)
+        
+        for i in range(1, 6):
+            ctk.CTkButton(
+                btn_frame, 
+                text=str(i), 
+                width=40, 
+                height=40,
+                corner_radius=20,
+                fg_color=theme.BTN_BG,
+                hover_color=theme.ACCENT_BLUE,
+                command=lambda val=i: rate(val)
+            ).pack(side="left", padx=4)
+            
+        ctk.CTkLabel(frame, text="1 (Low)  -  5 (High)", text_color=theme.TEXT_MUTED).pack()
 
-        tk.Button(popup, text="Submit", command=submit_rating).pack(pady=10)
 
     def calculate_xp(self, task, category, player, focus_rating):
         """Calculate and award XP based on category"""
@@ -311,22 +388,6 @@ class TasksTab:
 
         messagebox.showinfo("XP Gained", f"You earned {raw_xp:.1f} XP from {category}.")
         self.calendar_tab.add_event_today(task.name, raw_xp)
-    def delete_task(self):
-        """Delete selected task"""
-        try:
-            selection = self.task_listbox.get(self.task_listbox.curselection())
-            name = selection.split(" | ")[0].replace("✅", "").replace("⬜", "").strip()
-            self.manager.delete_task(name)
-            self.refresh()
-        except tk.TclError:
-            messagebox.showwarning("Warning", "Please select a task to delete.")
-
-    def delete_all_tasks(self):
-        """Delete all tasks"""
-        if messagebox.askyesno("Confirm", "Are you sure you want to delete all tasks?"):
-            self.manager.tasks = []
-            self.manager.save_tasks()
-            self.refresh()
 
     def show_calendar_view(self):
         """Switch to calendar view"""

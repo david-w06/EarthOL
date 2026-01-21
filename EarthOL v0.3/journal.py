@@ -3,11 +3,45 @@ import tkinter as tk
 from datetime import date, datetime
 from tkinter import messagebox
 from entry import JournalEntry
+import json
+import os
 
-# Global tracking of daily journal
-Journal = False
+# ------------Global journal state variable----------------------
+STATE_FILE = "journal_state.json"
+
+def load_journal_state():
+    today = date.today().isoformat()
+    default_state = {"journaled": False, "last_date": today}
+    if not os.path.exists(STATE_FILE):
+        return default_state
+
+    try:
+        with open(STATE_FILE, "r") as f:
+            state = json.load(f)
+
+        # RESET LOGIC: If the saved date isn't today, reset to False
+        if state.get("last_date") != today:
+            state = default_state
+            save_journal_state(state)
+        return state
+    except:
+        return default_state
+
+
+def save_journal_state(state):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=4)
+
+# --- GLOBAL INITIALIZATION ---
+_state = load_journal_state()
+Journal = _state["journaled"]
 _last_reset = date.today()
 
+def mark_as_journaled():
+    """Call this when a user successfully saves a journal entry"""
+    global Journal
+    Journal = True
+    save_journal_state({"journaled": True, "last_date": date.today().isoformat()})
 
 class JournalTab:
     def __init__(self, main_app):
@@ -88,6 +122,7 @@ class JournalTab:
             # This ensures the old window is completely gone from the focus stack
             entry = JournalEntry(input_date, "")
             self.root.after(100, lambda: entry.open_textbox(self.root, refresh_callback=self.refresh_listbox))
+            mark_as_journaled()
 
         ctk.CTkButton(wrap, text="Done", command=open_entry_textbox).pack(pady=12)
 
@@ -95,6 +130,7 @@ class JournalTab:
     # Helpers
     # -----------------------------
     def show(self):
+        self._check_reset() #check for journal refresh
         self.stats_frame.pack(pady=10, padx=16, fill="both", expand=True)
         self.refresh_listbox()
 
@@ -109,12 +145,13 @@ class JournalTab:
             self.task_listbox.insert("end", e.input_date)
 
     def _check_reset(self):
-        """Reset global Journal flag daily"""
+        """Check if date changed while app was running"""
         global Journal, _last_reset
         today = date.today()
         if today != _last_reset:
             Journal = False
             _last_reset = today
+            save_journal_state({"journaled": False, "last_date": today.isoformat()})
 
     # Placeholder methods for completeness
     def open_entry(self):
@@ -162,3 +199,9 @@ class JournalTab:
 
     def save_jounral(self):
         return
+
+
+
+
+
+

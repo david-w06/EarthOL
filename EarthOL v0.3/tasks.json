@@ -12,7 +12,7 @@
         "start_time": "2026-01-16T10:00:00",
         "category": "School Work",
         "duration": 60,
-        "completed": false,
+        "completed": true,
         "note": ""
     }
 ]
