@@ -1,16 +1,16 @@
 {
-    "level": 4,
-    "exp": 61.80000000000004,
-    "ovr_exp": 364.80000000000007,
-    "exp_to_next": 105,
+    "level": 6,
+    "exp": 27.80000000000004,
+    "ovr_exp": 544.8000000000001,
+    "exp_to_next": 114,
     "attributes": {
-        "intelligence": 218.88,
-        "knowledge": 72.96000000000001,
+        "intelligence": 326.88,
+        "knowledge": 108.96000000000001,
         "SE": 0,
         "athleticism": 0,
         "combat": 0,
         "artistry": 0,
         "looks": 0,
-        "discipline": 36.480000000000004
+        "discipline": 54.480000000000004
     }
 }

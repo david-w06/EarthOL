@@ -64,7 +64,7 @@ class HomeTab:
             )
 
         # Added consistent spacing
-        big_button("📋 Today's Tasks", "tasks").pack(pady=10)
+        big_button("📋 Tasks", "tasks").pack(pady=10)
         big_button("📊 Player Stats", "stats").pack(pady=10)
         big_button("📓 Journal", "journal").pack(pady=10)
         big_button("📅 Calendar", "calendar").pack(pady=10)

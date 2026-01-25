@@ -280,23 +280,46 @@ class TasksTab:
             self.refresh()
 
     def handle_school_work_xp(self, task, player):
-        """Handle XP calculation for school work"""
-        grade = simpledialog.askfloat("Grade", "Enter your grade (0–100):",
-                                      parent=self.root, minvalue=0, maxvalue=100)
-        if grade is None: return 
-        
-        target = simpledialog.askfloat("Target", "Enter your target grade (0–100):",
-                                       parent=self.root, minvalue=0, maxvalue=100)
-        if target is None: return
+        # --- Grade popup ---
+        grade = self.ask_float_popup(
+            title="Enter Grade",
+            prompt=f"Enter your grade (0–100):\n'{task.name}'",
+            min_val=0,
+            max_val=100
+        )
+        if grade is None:
+            return
 
-        weight = simpledialog.askfloat("Weight", "Enter assignment weight (0–1):",
-                                       parent=self.root, minvalue=0, maxvalue=1)
-        if weight is None: return
+        # --- Target popup ---
+        target = self.ask_float_popup(
+            title="Target Grade",
+            prompt="Enter your target grade (0–100):",
+            min_val=0,
+            max_val=100
+        )
+        if target is None:
+            return
+
+        # --- Weight popup ---
+        weight = self.ask_float_popup(
+            title="Assignment Weight",
+            prompt="Enter assignment weight (0–1):",
+            min_val=0,
+            max_val=1
+        )
+        if weight is None:
+            return
 
         disc = player.discipline if hasattr(player, "discipline") else 0
         base = int(task.duration)
-        raw_xp = base * (grade / 100) * ((grade - target) / 5) * (1 + disc) * weight
 
+        raw_xp = (
+                base
+                * (grade / 100)
+                * ((grade - target) / 5)
+                * (1 + disc)
+                * weight)
+        #right now for the formula, if you are not getting above the target there is no xp, maybe change that?
         if raw_xp < 0:
             raw_xp = 0
 
@@ -311,7 +334,7 @@ class TasksTab:
         """Ask for focus rating and award XP"""
         popup = ctk.CTkToplevel(self.root)
         popup.title("Rate Your Focus")
-        popup.geometry("300x260")
+        popup.geometry("320x260")
         popup.configure(fg_color=theme.BG_MAIN)
         popup.grab_set()
         
@@ -400,3 +423,46 @@ class TasksTab:
         self.calendar_container.pack_forget()
         self.list_container.pack(fill="both", expand=True)
         self.refresh()
+
+    def ask_float_popup(self, title, prompt, min_val, max_val):
+        popup = ctk.CTkToplevel(self.root)
+        popup.title(title)
+        popup.geometry("320x260")
+        popup.configure(fg_color=theme.BG_MAIN)
+        popup.grab_set()
+
+        frame = ctk.CTkFrame(popup, fg_color=theme.BG_CONTAINER, corner_radius=12)
+        frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+        ctk.CTkLabel(
+            frame,
+            text=prompt,
+            font=ctk.CTkFont(size=16),
+            wraplength=260
+        ).pack(pady=15)
+
+        value = ctk.StringVar()
+        entry = ctk.CTkEntry(frame, textvariable=value)
+        entry.pack(pady=10)
+
+        error_label = ctk.CTkLabel(frame, text="", text_color="red")
+        error_label.pack(pady=5)
+
+        result = {"value": None}
+
+        def submit():
+            try:
+                v = float(value.get())
+                if not (min_val <= v <= max_val):
+                    raise ValueError
+                result["value"] = v
+                popup.destroy()
+            except ValueError:
+                error_label.configure(
+                    text=f"Enter a number between {min_val} and {max_val}"
+                )
+
+        ctk.CTkButton(frame, text="Submit", command=submit).pack(pady=10)
+
+        popup.wait_window()
+        return result["value"]

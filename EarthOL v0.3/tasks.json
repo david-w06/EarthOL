@@ -4,7 +4,7 @@
         "start_time": "2015-10-10T10:10:00",
         "category": "Self-Study-STEM",
         "duration": 60,
-        "completed": false,
+        "completed": true,
         "note": ""
     },
     {
@@ -12,6 +12,38 @@
         "start_time": "2026-01-16T10:00:00",
         "category": "School Work",
         "duration": 60,
+        "completed": true,
+        "note": ""
+    },
+    {
+        "name": "3",
+        "start_time": null,
+        "category": "Self-Study-STEM",
+        "duration": 60,
+        "completed": true,
+        "note": ""
+    },
+    {
+        "name": "4",
+        "start_time": null,
+        "category": "School Work",
+        "duration": 60,
+        "completed": true,
+        "note": ""
+    },
+    {
+        "name": "530",
+        "start_time": null,
+        "category": "School Work",
+        "duration": 30,
+        "completed": true,
+        "note": ""
+    },
+    {
+        "name": "6",
+        "start_time": null,
+        "category": "School Work",
+        "duration": 50,
         "completed": true,
         "note": ""
     }

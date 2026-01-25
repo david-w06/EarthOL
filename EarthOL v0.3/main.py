@@ -79,7 +79,7 @@ class TaskManagerApp:
 
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        window_width = int(screen_width * 0.65)
+        window_width = int(screen_width * 0.70)
         window_height = int(screen_height * 0.70)
         self.root.geometry(f"{window_width}x{window_height}")
         self.root.configure(fg_color=theme.BG_MAIN) # Apply main bg color

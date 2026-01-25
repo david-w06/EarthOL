@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 from datetime import datetime, timedelta, date
+import theme
 
 class WeekView(ctk.CTkFrame):
     def __init__(self, master, task_manager):
@@ -69,7 +70,7 @@ class WeekView(ctk.CTkFrame):
         # Canvas
         self.canvas = tk.Canvas(
             self.canvas_frame,
-            bg="#111111",
+            bg=theme.BG_MAIN,
             highlightthickness=0,
             yscrollcommand=self.v_scrollbar.set,
             xscrollcommand=self.h_scrollbar.set
@@ -78,6 +79,35 @@ class WeekView(ctk.CTkFrame):
 
         self.v_scrollbar.configure(command=self.canvas.yview)
         self.h_scrollbar.configure(command=self.canvas.xview)
+
+        #Fast Travel
+        self.jump_label = ctk.CTkLabel(self.header_frame, text="Jump to...", font=("Arial", 16, "bold"))
+        self.jump_label.pack(side="left", padx=(20, 5))
+
+        self.jump_entry = ctk.CTkEntry(self.header_frame, width=100, placeholder_text="YYYY-MM")
+        current_val = date.today().strftime("%Y-%m")
+        self.jump_entry.insert(0, current_val)
+        self.jump_entry.pack(side="left", padx=5)
+
+        self.btn_jump = ctk.CTkButton(self.header_frame, text="Go", width=80, command=self.handle_jump)
+        self.btn_jump.pack(side="left", padx=5)
+
+    def handle_jump(self):
+        input_data = self.jump_entry.get().strip()
+
+        if input_data:
+            try:
+                year, month = map(int, input_data.split("-"))
+                self.fast_travel(year, month)
+            except (ValueError, AttributeError):
+                pass
+
+    def fast_travel(self, year, month):
+        # Logic remains the same
+        target_date = date(year, month, 1)
+        self.start_of_week = self.get_start_of_week(target_date)
+        self.refresh()
+
 
         # Bind events
         self.canvas.bind("<Configure>", self.on_resize)
@@ -139,11 +169,22 @@ class WeekView(ctk.CTkFrame):
             
             # Vertical lines
             self.canvas.create_line(
-                x, 0, x, self.header_height + total_hours * self.hour_height,
-                fill="#333333", width=1
-            )
+                x - 1, 0,
+                x - 1, self.header_height + total_hours * self.hour_height,
+                fill="#ffffff",
+                width=1)
 
-        # Draw Hours and Horizontal Lines
+
+        # Draw Hours and Horizontal Lines, take care of the top edge case
+        self.canvas.create_line(
+            self.left_margin_width,
+            self.header_height,
+            self.left_margin_width + 7 * self.day_width,
+            self.header_height,
+            fill="#ffffff",
+            width=1
+        )
+
         for i in range(total_hours + 1):
             y = self.header_height + i * self.hour_height
             hour_label = f"{self.start_hour + i:02d}:00"
@@ -153,7 +194,7 @@ class WeekView(ctk.CTkFrame):
                 self.left_margin_width / 2,
                 y,
                 text=hour_label,
-                fill="#888888",
+                fill="#ffffff",
                 font=("Arial", 10)
             )
             
@@ -161,7 +202,7 @@ class WeekView(ctk.CTkFrame):
             self.canvas.create_line(
                 self.left_margin_width, y, 
                 self.left_margin_width + 7 * self.day_width, y,
-                fill="#333333", width=1
+                fill="#ffffff", width=1
             )
 
         # Set scroll region
@@ -223,3 +264,4 @@ class WeekView(ctk.CTkFrame):
                 fill="white",
                 font=("Arial", 9),
             )
+

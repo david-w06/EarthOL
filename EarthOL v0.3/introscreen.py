@@ -28,19 +28,21 @@ class IntroScreen:
         hint.place(relx=0.5, rely=0.95, anchor="center")
 
         self.texts = [
-            "People love video games, The thrill of leveling up",
-            "Unlocking new skills, Watching numbers rise",
+            "People love video games,",
+            "The thrill of leveling up",
+            "Unlocking new skills, watching numbers rise",
             "But in chasing virtual progress",
             "How many of us forget the greatest game of all",
             "Running for 4.57 billion years",
             "Across 197 servers",
             "With over 8 billion active players",
             "And a map spanning 510 million square kilometers",
-            "No respawns, No cheating, One account for lifetime",
+            "No respawns, No cheating",
+            "One account for lifetime",
             "Welcome to Earth Online",
             "This application is your interface to life itself",
-            "A productivity tracker and task visualizer designed",
-            "to help you level up in the only game that truly matters",
+            "A productivity tracker and task visualizer",
+            "designed to help you level up in the only game that truly matters",
             "Let's get started"
         ]
 
