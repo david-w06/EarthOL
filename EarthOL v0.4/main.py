@@ -16,6 +16,8 @@ import os
 import json
 
 
+#testing github
+
 # ----------------- EXP SYSTEM ----------------- #
 class SegmentedExpBar(ctk.CTkFrame):
     def __init__(self, master, exp_value, exp_level, width=340, height=24,
